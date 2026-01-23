@@ -4,7 +4,6 @@ import { Image, View, Text, StatusBar } from 'react-native';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import ProfilScreen from './src/screens/ProfilScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import GeneralScreen from './src/screens/GeneralScreen';
 import EntryScreen from './src/screens/EntryScreen';
@@ -52,8 +51,6 @@ function MainApp() {
               iconName = focused ? 'add-circle' : 'add-circle-outline';
             } else if (route.name === 'Settings') {
               iconName = focused ? 'settings' : 'settings-outline';
-            } else if (route.name === 'Profil') {
-              iconName = focused ? 'person' : 'person-outline';
             }
 
             return <Ionicons name={iconName} size={24} color={color} />;
@@ -96,11 +93,7 @@ function MainApp() {
           options={{ title: "Услуги" }}
         />
 
-        <Tab.Screen
-          name='Profil'
-          component={ProfilScreen}
-          options={{ title: "Профиль" }}
-        />
+
         <Tab.Screen
           name='Settings'
           component={SettingsScreen}
