@@ -7,18 +7,16 @@ import { AntDesign, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import DataBase from '../../data/data';
 import moment from 'moment';
 import 'moment/locale/ru';
-//style
 import { useTheme } from '../../context/ThemeProvider';
-import { darkTheme, lightTheme } from '../../assets/styles/styles';
 import { useData } from '../../context/DataContext';
 import { loadDataFromDB } from '../utils/dataHelpers';
+import ScreenHeader from '../components/ui/ScreenHeader';
+import { getColors, typography, spacing, borderRadius, shadows } from '../theme';
 moment.locale('ru');
 
-// Компонент развернутого раздела
-const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, setShowModal, }) => {
-  const themeContext = useTheme();
-  const { theme } = themeContext;
-  const styles = theme === 'dark' ? darkTheme : lightTheme;
+const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, setShowModal }) => {
+  const { theme } = useTheme();
+  const colors = getColors(theme);
 
   const [expanded, setExpanded] = useState(false);
   const mDate = moment(title, 'DD.MM.YY');
@@ -34,21 +32,20 @@ const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, set
     <View style={{ marginBottom: 12 }}>
       <TouchableOpacity
         onPress={toggleExpand}
-        style={[styles.sectionHeader, {
-          backgroundColor: theme === 'dark' ? '#1E293B' : '#FFFFFF',
-          paddingVertical: 16,
-          paddingHorizontal: 20,
-          borderWidth: 0,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
+        style={{
+          backgroundColor: colors.surface,
+          paddingVertical: spacing.base,
+          paddingHorizontal: spacing.lg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          ...shadows.sm,
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderRadius: 16,
-        }]}
+          borderRadius: borderRadius.lg,
+          marginBottom: spacing.md,
+        }}
+        activeOpacity={0.7}
       >
         <View style={{ flexDirection: "row", alignItems: 'center' }}>
           <View style={{
@@ -66,7 +63,7 @@ const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, set
               {capitalizedDay}
             </Text>
           </View>
-          <Text style={[styles.headerText, { fontWeight: '600', color: theme === 'dark' ? 'white' : '#1E293B' }]}>{title}</Text>
+          <Text style={[{ fontWeight: '600', color: colors.text, fontSize: typography.fontSize.body }]}>{title}</Text>
         </View>
         <AntDesign
           name={expanded ? "up" : "down"}
@@ -102,7 +99,7 @@ const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, set
                 }}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.text, { fontWeight: '600', fontSize: 16, marginBottom: 4 }]}>
+                  <Text style={{ fontWeight: typography.fontWeight.semibold, fontSize: typography.fontSize.body, marginBottom: spacing.xs, color: colors.text }}>
                     {serviceName}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -124,7 +121,7 @@ const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, set
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[styles.text, { fontWeight: '700', fontSize: 18, color: '#6366F1' }]}>
+                  <Text style={{ fontWeight: typography.fontWeight.bold, fontSize: typography.fontSize.h4, color: colors.primary }}>
                     {cost}€
                   </Text>
                 </View>
@@ -146,11 +143,8 @@ const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
   const [appointmentData, setAppointmentData] = useState({});
   const [isAddMode, setIsAddMode] = useState(false);
   const { updateData } = useData();
-
-  //style 
-  const themeContext = useTheme();
-  const { theme } = themeContext;
-  const styles = theme === 'dark' ? darkTheme : lightTheme;
+  const { theme } = useTheme();
+  const colors = getColors(theme);
 
 
   const loadWorkDone = async () => {
@@ -249,27 +243,25 @@ const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
       <View style={{ marginBottom: 16 }}>
         <TouchableOpacity
           onPress={() => setIsExpanded(!isExpanded)}
-          style={[styles.sectionHeader, {
-            backgroundColor: theme === 'dark' ? '#1E293B' : '#FFFFFF',
-            borderRadius: 16,
-            paddingVertical: 16,
-            paddingHorizontal: 20,
-            borderWidth: 0,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 3,
+          style={{
+            backgroundColor: colors.surface,
+            borderRadius: borderRadius.lg,
+            paddingVertical: spacing.base,
+            paddingHorizontal: spacing.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            ...shadows.sm,
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-          }]}
+          }}
         >
-          <Text style={[styles.headerText, {
-            fontWeight: '700',
-            color: theme === 'dark' ? 'white' : '#1E293B',
+          <Text style={{
+            fontWeight: typography.fontWeight.bold,
+            color: colors.text,
+            fontSize: typography.fontSize.h4,
             textTransform: 'capitalize'
-          }]}>
+          }}>
             {monthLabel}
           </Text>
           <AntDesign
@@ -300,9 +292,11 @@ const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
   };
 
   return (
-    <View style={styles.container} animationType="slide">
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScreenHeader title="Записи" />
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={{ paddingHorizontal: 15, paddingTop: 10 }}>
+        <View style={{ paddingHorizontal: spacing.base, paddingTop: spacing.md }}>
           {sortedMonths.length > 0 ? (
             sortedMonths.map(month => (
               <MonthlySection
@@ -312,8 +306,10 @@ const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
               />
             ))
           ) : (
-            <View style={{ alignItems: 'center', marginTop: 50 }}>
-              <Text style={{ color: '#64748B' }}>Нет записей за этот период</Text>
+            <View style={{ alignItems: 'center', marginTop: spacing['4xl'], paddingVertical: spacing['3xl'] }}>
+              <Text style={{ color: colors.textSecondary, fontSize: typography.fontSize.body }}>
+                Нет записей за этот период
+              </Text>
             </View>
           )}
         </View>

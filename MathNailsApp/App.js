@@ -50,18 +50,34 @@ function MainApp() {
               iconName = focused ? 'list' : 'list-outline';
             } else if (route.name === 'Entry') {
               iconName = focused ? 'add-circle' : 'add-circle-outline';
-
             } else if (route.name === 'Settings') {
               iconName = focused ? 'settings' : 'settings-outline';
             } else if (route.name === 'Profil') {
               iconName = focused ? 'person' : 'person-outline';
             }
 
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return <Ionicons name={iconName} size={24} color={color} />;
           },
-          tabBarActiveTintColor: '#6366f1',
-          tabBarInactiveTintColor: 'gray',
-          headerShown: true, // Keep headers visible as per standard iOS/Android patterns
+          headerShown: false, // Disable native headers
+          tabBarActiveTintColor: '#6366F1',
+          tabBarInactiveTintColor: theme === 'dark' ? '#94A3B8' : '#64748B',
+          tabBarStyle: {
+            backgroundColor: theme === 'dark' ? '#1E293B' : '#FFFFFF',
+            borderTopWidth: 1,
+            borderTopColor: theme === 'dark' ? '#334155' : '#F1F5F9',
+            height: 94,
+            paddingBottom: 36,
+            paddingTop: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 8,
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '600',
+          },
         })}
       >
         <Tab.Screen

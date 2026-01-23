@@ -1,17 +1,15 @@
-import { Text, View, Switch, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { Text, View, Switch, Alert, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../context/ThemeProvider';
-import { lightTheme, darkTheme } from '../../assets/styles/styles';
+import ScreenHeader from '../components/ui/ScreenHeader';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import { getColors, typography, spacing, borderRadius } from '../theme';
 
 const SettingsScreen = () => {
-  const themeContext = useTheme();
-  const { theme, toggleTheme } = themeContext;
-  const styles = theme === 'dark' ? darkTheme : lightTheme;
-
-  if (!themeContext) {
-    console.error('ThemeContext not found');
-    return null;
-  }
+  const { theme, toggleTheme } = useTheme();
+  const colors = getColors(theme);
 
   const handleClearData = async () => {
     Alert.alert(
@@ -39,31 +37,76 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={styles.containerSettings}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 20 }}>
-        <Text style={styles.text}>Тёмная тема</Text>
-        <Switch
-          trackColor={{ false: '#767577', true: '#81b0ff' }}
-          thumbColor={theme === 'dark' ? '#f5dd4b' : '#f4f3f4'}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleTheme}
-          value={theme === 'dark'}
-        />
-      </View>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScreenHeader title="Настройки" />
 
-      <TouchableOpacity
-        onPress={handleClearData}
-        style={{
-          backgroundColor: '#EF4444',
-          padding: 15,
-          borderRadius: 12,
-          width: '100%',
-          alignItems: 'center',
-          marginTop: 20
-        }}
-      >
-        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Сбросить все данные</Text>
-      </TouchableOpacity>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.base }}>
+        {/* Theme Settings */}
+        <Card style={{ marginBottom: spacing.base }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontSize: typography.fontSize.body,
+                fontWeight: typography.fontWeight.semibold,
+                color: colors.text,
+                marginBottom: spacing.xs,
+              }}>
+                Тёмная тема
+              </Text>
+              <Text style={{
+                fontSize: typography.fontSize.caption,
+                color: colors.textSecondary,
+              }}>
+                Переключить между светлой и тёмной темой
+              </Text>
+            </View>
+            <Switch
+              trackColor={{ false: colors.textTertiary, true: colors.primaryLight }}
+              thumbColor={theme === 'dark' ? colors.primary : '#f4f3f4'}
+              ios_backgroundColor={colors.textTertiary}
+              onValueChange={toggleTheme}
+              value={theme === 'dark'}
+            />
+          </View>
+        </Card>
+
+        {/* Danger Zone */}
+        <View style={{ marginTop: spacing.xl }}>
+          <Text style={{
+            fontSize: typography.fontSize.caption,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.textSecondary,
+            marginBottom: spacing.md,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+          }}>
+            Опасная зона
+          </Text>
+
+          <Card style={{ borderColor: colors.danger, borderWidth: 1 }}>
+            <Text style={{
+              fontSize: typography.fontSize.body,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.text,
+              marginBottom: spacing.xs,
+            }}>
+              Сбросить все данные
+            </Text>
+            <Text style={{
+              fontSize: typography.fontSize.caption,
+              color: colors.textSecondary,
+              marginBottom: spacing.base,
+            }}>
+              Это действие удалит все записи, услуги и настройки. Восстановление невозможно.
+            </Text>
+            <Button
+              title="Удалить все данные"
+              variant="danger"
+              onPress={handleClearData}
+            />
+          </Card>
+        </View>
+      </View>
     </View>
   );
 };

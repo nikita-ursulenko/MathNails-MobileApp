@@ -1,30 +1,25 @@
 // GeneralScreen.js
 
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, RefreshControl, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, RefreshControl, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { loadDataFromDB, transformData } from '../utils/dataHelpers';
-import ExpandableSection from '../components/ExpandableSection';
 import moment from 'moment';
 import 'moment/locale/ru';
 import { useTheme } from '../../context/ThemeProvider';
-import { darkTheme, lightTheme } from '../../assets/styles/styles';
-import EntryScreen from './EntryScreen';
 import { useData } from '../../context/DataContext';
 import MonthlyExpandableSection from '../components/MonthlyExpandableSection';
-
+import ScreenHeader from '../components/ui/ScreenHeader';
+import Card from '../components/ui/Card';
+import { getColors, typography, spacing, borderRadius, shadows } from '../theme';
 
 moment.locale('ru');
-
-// Logic extracted to src/utils/dataHelpers.js
 
 const MainScreen = () => {
   const { data, updateData } = useData();
   const [activeTab, setActiveTab] = useState(7);
   const [refreshing, setRefreshing] = useState(false);
-  const themeContext = useTheme();
-  const { theme } = themeContext;
-  const styles = theme === 'dark' ? darkTheme : lightTheme;
+  const { theme } = useTheme();
+  const colors = getColors(theme);
 
   useEffect(() => {
     updateData(loadDataFromDB);
@@ -53,40 +48,43 @@ const MainScreen = () => {
   const transformedData = transformData(filteredTotalsData);
 
   const SummaryCard = ({ title, value, icon, color }) => (
-    <View style={{
-      backgroundColor: theme === 'dark' ? '#1E293B' : '#FFFFFF',
-      borderRadius: 20,
-      padding: 16,
-      marginRight: 12,
-      minWidth: 140,
-      borderWidth: 1,
-      borderColor: theme === 'dark' ? '#334155' : '#F1F5F9',
-      shadowColor: color,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
-    }}>
-      <Text style={{ fontSize: 12, color: '#64748B', fontWeight: '600', marginBottom: 8 }}>{title}</Text>
-      <Text style={{ fontSize: 20, fontWeight: '700', color: theme === 'dark' ? 'white' : '#1E293B' }}>{value.toFixed(2)}€</Text>
-    </View>
+    <Card style={{ marginRight: spacing.md, minWidth: 140, padding: spacing.base }}>
+      <Text style={{
+        fontSize: typography.fontSize.label,
+        color: colors.textSecondary,
+        fontWeight: typography.fontWeight.semibold,
+        marginBottom: spacing.sm,
+      }}>
+        {title}
+      </Text>
+      <Text style={{
+        fontSize: typography.fontSize.h3,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text,
+      }}>
+        {value.toFixed(2)}€
+      </Text>
+    </Card>
   );
 
   const TabButton = ({ value, label }) => (
     <TouchableOpacity
       onPress={() => setActiveTab(value)}
       style={{
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 12,
-        backgroundColor: activeTab === value ? '#6366F1' : (theme === 'dark' ? '#1E293B' : '#F1F5F9'),
-        marginRight: 8,
+        paddingHorizontal: spacing.base,
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.md,
+        backgroundColor: activeTab === value ? colors.primary : colors.surface,
+        marginRight: spacing.sm,
+        borderWidth: 1,
+        borderColor: activeTab === value ? colors.primary : colors.border,
       }}
+      activeOpacity={0.7}
     >
       <Text style={{
-        color: activeTab === value ? 'white' : (theme === 'dark' ? '#94A3B8' : '#64748B'),
-        fontSize: 13,
-        fontWeight: '600'
+        color: activeTab === value ? colors.textInverse : colors.textSecondary,
+        fontSize: typography.fontSize.caption,
+        fontWeight: typography.fontWeight.semibold,
       }}>
         {label}
       </Text>
@@ -94,47 +92,53 @@ const MainScreen = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme === 'dark' ? '#0F172A' : '#F8FAFC' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScreenHeader title="Ваш Дашборд" />
+
       <ScrollView
-        stickyHeaderIndices={[1]}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366F1" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
+        showsVerticalScrollIndicator={false}
       >
         {/* Dashboard Summary */}
-        <View style={{ padding: 20, paddingTop: 10 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Text style={[styles.text, { fontSize: 24, fontWeight: '700' }]}>Ваш Дашборд</Text>
-          </View>
-
-          <View style={{ flexDirection: 'row', marginBottom: 20 }}>
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.base }}>
+          <View style={{ flexDirection: 'row', marginBottom: spacing.lg }}>
             <TabButton value={7} label="7 дней" />
             <TabButton value={14} label="14 дней" />
             <TabButton value={30} label="Месяц" />
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingBottom: 10 }}>
-            <SummaryCard title="Общая выручка" value={totals.cost} color="#6366F1" />
-            <SummaryCard title="Чистая прибыль" value={totals.netProfit} color="#22C55E" />
-            <SummaryCard title="Чаевые" value={totals.tips} color="#F59E0B" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.xl }}>
+            <SummaryCard title="Общая выручка" value={totals.cost} color={colors.primary} />
+            <SummaryCard title="Чистая прибыль" value={totals.netProfit} color={colors.success} />
+            <SummaryCard title="Чаевые" value={totals.tips} color={colors.warning} />
           </ScrollView>
         </View>
 
         {/* Records Section */}
-        <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
-          <Text style={[styles.text, { fontSize: 20, fontWeight: '700', marginBottom: 12 }]}>История записей</Text>
+        <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.xl }}>
+          <Text style={{
+            fontSize: typography.fontSize.h3,
+            fontWeight: typography.fontWeight.bold,
+            color: colors.text,
+            marginBottom: spacing.md,
+          }}>
+            История записей
+          </Text>
           {transformedData.length > 0 ? (
             transformedData.map((item, index) => (
               <MonthlyExpandableSection key={index} monthlyData={item} />
             ))
           ) : (
-            <View style={{ alignItems: 'center', marginTop: 40 }}>
-              <Text style={{ color: '#64748B', textAlign: 'center' }}>Нет записей для отображения</Text>
+            <View style={{ alignItems: 'center', marginTop: spacing['4xl'], paddingVertical: spacing['3xl'] }}>
+              <Text style={{ color: colors.textSecondary, textAlign: 'center', fontSize: typography.fontSize.body }}>
+                Нет записей для отображения
+              </Text>
             </View>
           )}
         </View>
       </ScrollView>
-
     </View>
   );
 };

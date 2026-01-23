@@ -5,8 +5,9 @@ import ButtonSpecial from '../components/ui/ButtonSpecial';
 import AddButton from '../components/ui/AddButton';
 import CloseModal from '../components/ui/CloseModal';
 import SwipeableModal from '../components/ui/SwipeableModal';
+import ScreenHeader from '../components/ui/ScreenHeader';
 import { useTheme } from '../../context/ThemeProvider';
-import { darkTheme, lightTheme } from '../../assets/styles/styles';
+import { getColors, typography, spacing, borderRadius, shadows } from '../theme';
 
 const ServicesScreen = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -21,9 +22,8 @@ const ServicesScreen = () => {
   const [selectedService, setSelectedService] = useState('');
   const [activeTab, setActiveTab] = useState('Manicure');
 
-  const themeContext = useTheme();
-  const { theme } = themeContext;
-  const styles = theme === 'dark' ? darkTheme : lightTheme;
+  const { theme } = useTheme();
+  const colors = getColors(theme);
 
   useEffect(() => {
     loadServices();
@@ -82,24 +82,20 @@ const ServicesScreen = () => {
       <TouchableOpacity
         onPress={() => openModalSelect(item)}
         style={{
-          backgroundColor: theme === 'dark' ? '#1E293B' : '#FFFFFF',
-          borderRadius: 16,
-          padding: 20,
-          marginBottom: 12,
+          backgroundColor: colors.surface,
+          borderRadius: borderRadius.lg,
+          padding: spacing.lg,
+          marginBottom: spacing.base,
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 5,
-          elevation: 2,
+          ...shadows.sm,
           borderWidth: 1,
-          borderColor: theme === 'dark' ? '#334155' : '#F1F5F9',
+          borderColor: colors.border,
         }}
       >
-        <Text style={[styles.text, { fontWeight: '600', fontSize: 18 }]}>{item.name}</Text>
-        <Text style={[styles.text, { fontWeight: '700', fontSize: 20, color: '#6366F1' }]}>{item.cost}€</Text>
+        <Text style={{ ...typography.styles.h4, color: colors.text }}>{item.name}</Text>
+        <Text style={{ ...typography.styles.h3, color: colors.primary, fontWeight: typography.fontWeight.bold }}>{item.cost}€</Text>
       </TouchableOpacity>
     );
   };
@@ -110,7 +106,7 @@ const ServicesScreen = () => {
         data={filteredServices}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: spacing.base, paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
           <View style={{ alignItems: 'center', marginTop: 50 }}>
@@ -147,16 +143,16 @@ const ServicesScreen = () => {
       onPress={() => setActiveTab(value)}
       style={{
         flex: 1,
-        paddingVertical: 12,
+        paddingVertical: spacing.md,
         alignItems: 'center',
         borderBottomWidth: 3,
-        borderBottomColor: activeTab === value ? '#6366F1' : 'transparent'
+        borderBottomColor: activeTab === value ? colors.primary : 'transparent'
       }}
     >
       <Text style={{
-        fontWeight: '700',
-        color: activeTab === value ? '#6366F1' : '#64748B',
-        fontSize: 16
+        fontWeight: typography.fontWeight.bold,
+        color: activeTab === value ? colors.primary : colors.textSecondary,
+        fontSize: typography.fontSize.body
       }}>
         {title}
       </Text>
@@ -164,63 +160,79 @@ const ServicesScreen = () => {
   );
 
   const CategoryPicker = ({ selected, onSelect }) => (
-    <View style={{ flexDirection: 'row', marginBottom: 20, backgroundColor: theme === 'dark' ? '#1E293B' : '#F1F5F9', borderRadius: 12, padding: 4 }}>
+    <View style={{ flexDirection: 'row', marginBottom: spacing.lg, backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.xs, borderWidth: 1, borderColor: colors.border }}>
       <TouchableOpacity
         onPress={() => onSelect('Manicure')}
-        style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: selected === 'Manicure' ? '#6366F1' : 'transparent', borderRadius: 10 }}
+        style={{ flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: selected === 'Manicure' ? colors.primary : 'transparent', borderRadius: borderRadius.sm }}
       >
-        <Text style={{ color: selected === 'Manicure' ? 'white' : '#64748B', fontWeight: '600' }}>Маникюр</Text>
+        <Text style={{ color: selected === 'Manicure' ? colors.textInverse : colors.textSecondary, fontWeight: typography.fontWeight.semibold }}>Маникюр</Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => onSelect('Pedicure')}
-        style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: selected === 'Pedicure' ? '#6366F1' : 'transparent', borderRadius: 10 }}
+        style={{ flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: selected === 'Pedicure' ? colors.primary : 'transparent', borderRadius: borderRadius.sm }}
       >
-        <Text style={{ color: selected === 'Pedicure' ? 'white' : '#64748B', fontWeight: '600' }}>Педикюр</Text>
+        <Text style={{ color: selected === 'Pedicure' ? colors.textInverse : colors.textSecondary, fontWeight: typography.fontWeight.semibold }}>Педикюр</Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme === 'dark' ? '#0F172A' : '#F8FAFC' }]}>
-      <SwipeableModal visible={isModalVisible} onClose={closeModalAdd} styles={styles} theme={theme}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <SwipeableModal visible={isModalVisible} onClose={closeModalAdd} theme={theme}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: 24 }}>
-          <Text style={[styles.text, { fontSize: 24, fontWeight: '700' }]}>Новая услуга</Text>
+          <Text style={{ fontSize: typography.fontSize.h2, fontWeight: typography.fontWeight.bold, color: colors.text }}>Новая услуга</Text>
           <TouchableOpacity onPress={closeModalAdd}>
             <Text style={{ color: '#6366F1', fontWeight: '600' }}>Отмена</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 8, marginLeft: 4 }]}>Категория</Text>
+        <Text style={{ fontSize: typography.fontSize.caption, color: colors.textSecondary, marginBottom: spacing.sm, marginLeft: spacing.xs }}>Категория</Text>
         <CategoryPicker selected={serviceCategory} onSelect={setServiceCategory} />
 
-        <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4 }]}>Название (под-услуга)</Text>
+        <Text style={{ fontSize: typography.fontSize.caption, color: colors.textSecondary, marginBottom: spacing.xs, marginLeft: spacing.xs }}>Название (под-услуга)</Text>
         <TextInput
           placeholder="Напр. Гель-лак"
           placeholderTextColor="#94A3B8"
           value={serviceName}
           onChangeText={(text) => setServiceName(text)}
-          style={[styles.text, styles.input]}
+          style={{
+            color: colors.text,
+            backgroundColor: colors.background,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            fontSize: typography.fontSize.body,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
         />
 
-        <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Цена (€)</Text>
+        <Text style={{ fontSize: typography.fontSize.caption, color: colors.textSecondary, marginBottom: spacing.xs, marginLeft: spacing.xs, marginTop: spacing.md }}>Цена (€)</Text>
         <TextInput
           placeholder="0.00"
           placeholderTextColor="#94A3B8"
           value={servicePrice}
           onChangeText={(text) => setServicePrice(text)}
           keyboardType="numeric"
-          style={[styles.text, styles.input]}
+          style={{
+            color: colors.text,
+            backgroundColor: colors.background,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            fontSize: typography.fontSize.body,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
         />
 
         <ButtonSpecial title="Создать услугу" onPress={handleAddService} style={{ marginTop: 32 }} />
       </SwipeableModal>
 
-      <SwipeableModal visible={IsModalVisibleSelect} onClose={() => setIsModalVisibleSelect(false)} styles={styles} theme={theme}>
+      <SwipeableModal visible={IsModalVisibleSelect} onClose={() => setIsModalVisibleSelect(false)} theme={theme}>
         {selectedService && (
           <View style={{ alignItems: 'center', marginBottom: 32 }}>
             <Text style={{ color: '#64748B', fontWeight: '600', marginBottom: 4 }}>{selectedService.category === 'Pedicure' ? 'ПЕДИКЮР' : 'МАНИКЮР'}</Text>
-            <Text style={[styles.text, { fontSize: 24, fontWeight: '700', marginBottom: 8, textAlign: 'center' }]}>{selectedService.name}</Text>
-            <Text style={[styles.text, { fontSize: 32, fontWeight: '800', color: '#6366F1' }]}>{selectedService.cost}€</Text>
+            <Text style={{ fontSize: typography.fontSize.h2, fontWeight: typography.fontWeight.bold, marginBottom: spacing.sm, textAlign: 'center', color: colors.text }}>{selectedService.name}</Text>
+            <Text style={{ fontSize: typography.fontSize.display, fontWeight: typography.fontWeight.extrabold, color: colors.primary }}>{selectedService.cost}€</Text>
           </View>
         )}
         <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
@@ -239,45 +251,58 @@ const ServicesScreen = () => {
         </View>
       </SwipeableModal>
 
-      <SwipeableModal visible={IsModalVisibleSelectChange} onClose={() => setIsModalVisibleSelectChange(false)} styles={styles} theme={theme}>
+      <SwipeableModal visible={IsModalVisibleSelectChange} onClose={() => setIsModalVisibleSelectChange(false)} theme={theme}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: 24 }}>
-          <Text style={[styles.text, { fontSize: 24, fontWeight: '700' }]}>Изменить услугу</Text>
+          <Text style={{ fontSize: typography.fontSize.h2, fontWeight: typography.fontWeight.bold, color: colors.text }}>Изменить услугу</Text>
           <TouchableOpacity onPress={() => setIsModalVisibleSelectChange(false)}>
             <Text style={{ color: '#6366F1', fontWeight: '600' }}>Отмена</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 8, marginLeft: 4 }]}>Категория</Text>
+        <Text style={{ fontSize: typography.fontSize.caption, color: colors.textSecondary, marginBottom: spacing.sm, marginLeft: spacing.xs }}>Категория</Text>
         <CategoryPicker selected={serviceCategory} onSelect={setServiceCategory} />
 
-        <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4 }]}>Название</Text>
+        <Text style={{ fontSize: typography.fontSize.caption, color: colors.textSecondary, marginBottom: spacing.xs, marginLeft: spacing.xs }}>Название</Text>
         <TextInput
           placeholder="Название услуги"
           placeholderTextColor="#94A3B8"
           value={serviceName}
           onChangeText={(text) => setServiceName(text)}
-          style={[styles.text, styles.input]}
+          style={{
+            color: colors.text,
+            backgroundColor: colors.background,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            fontSize: typography.fontSize.body,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
         />
 
-        <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Цена (€)</Text>
+        <Text style={{ fontSize: typography.fontSize.caption, color: colors.textSecondary, marginBottom: spacing.xs, marginLeft: spacing.xs, marginTop: spacing.md }}>Цена (€)</Text>
         <TextInput
           placeholder="Цена услуги"
           placeholderTextColor="#94A3B8"
           value={servicePrice}
           onChangeText={(text) => setServicePrice(text)}
           keyboardType="numeric"
-          style={[styles.text, styles.input]}
+          style={{
+            color: colors.text,
+            backgroundColor: colors.background,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+            fontSize: typography.fontSize.body,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
         />
         <ButtonSpecial title="Сохранить" onPress={handleEditService} style={{ marginTop: 32 }} />
       </SwipeableModal>
 
-      <View style={{ flex: 1 }}>
-        <View style={{ padding: 20, paddingBottom: 10 }}>
-          <Text style={[styles.text, { fontSize: 28, fontWeight: '800', marginBottom: 4 }]}>Услуги</Text>
-          <Text style={{ color: '#64748B', fontSize: 16 }}>Ваш прейскурант</Text>
-        </View>
+      <ScreenHeader title="Услуги" subtitle="Ваш прейскурант" />
 
-        <View style={{ flexDirection: 'row', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: theme === 'dark' ? '#1E293B' : '#F1F5F9' }}>
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: spacing.lg, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <CategoryTab title="Маникюр" value="Manicure" />
           <CategoryTab title="Педикюр" value="Pedicure" />
         </View>
