@@ -18,53 +18,55 @@ export const loadDataFromDB = async () => {
         const data = JSON.parse(dataString) || {};
         const commissionRate = await getCommissionRate();
 
-        const formattedData = Object.keys(data).map(date => {
-            let totalCost = 0,
-                totalTips = 0,
-                myBar = 0,
-                moneySalon = 0,
-                earnings = 0;
+        const formattedData = Object.keys(data)
+            .filter(date => data[date] && data[date].length > 0)
+            .map(date => {
+                let totalCost = 0,
+                    totalTips = 0,
+                    myBar = 0,
+                    moneySalon = 0,
+                    earnings = 0;
 
-            data[date].forEach(item => {
-                const itemCost = parseFloat(item.cost || '0') || 0;
-                const itemTips = parseFloat(item.notes || '0') || 0;
+                data[date].forEach(item => {
+                    const itemCost = parseFloat(item.cost || '0') || 0;
+                    const itemTips = parseFloat(item.notes || '0') || 0;
 
-                totalCost += itemCost;
-                totalTips += itemTips;
-                earnings += itemCost * commissionRate;
+                    totalCost += itemCost;
+                    totalTips += itemTips;
+                    earnings += itemCost * commissionRate;
 
-                const payment = (item.paymentMethod || '').trim().toLowerCase();
-                // Проверяем на 'bar' или 'наличные'
-                if (payment === 'bar' || payment === 'наличные') {
-                    myBar += itemCost;
+                    const payment = (item.paymentMethod || '').trim().toLowerCase();
+                    // Проверяем на 'bar' или 'наличные'
+                    if (payment === 'bar' || payment === 'наличные') {
+                        myBar += itemCost;
+                    } else {
+                        moneySalon += itemCost;
+                    }
+                });
+
+                const netProfit = earnings + totalTips;
+                const debt = myBar - earnings;
+                let debtStatus;
+                if (debt > 0) {
+                    debtStatus = 'Долг мастера';
+                } else if (debt < 0) {
+                    debtStatus = 'Долг салона';
                 } else {
-                    moneySalon += itemCost;
+                    debtStatus = 'Никто никому не должен';
                 }
+
+                return {
+                    date,
+                    cost: totalCost,
+                    tips: totalTips,
+                    earnings,
+                    netProfit,
+                    myBar,
+                    moneySalon,
+                    debt,
+                    debtStatus,
+                };
             });
-
-            const netProfit = earnings + totalTips;
-            const debt = myBar - earnings;
-            let debtStatus;
-            if (debt > 0) {
-                debtStatus = 'Долг мастера';
-            } else if (debt < 0) {
-                debtStatus = 'Долг салона';
-            } else {
-                debtStatus = 'Никто никому не должен';
-            }
-
-            return {
-                date,
-                cost: totalCost,
-                tips: totalTips,
-                earnings,
-                netProfit,
-                myBar,
-                moneySalon,
-                debt,
-                debtStatus,
-            };
-        });
 
         return formattedData.sort((a, b) => {
             const dateA = moment(a.date, 'DD.MM.YY');
@@ -87,10 +89,17 @@ export const transformData = (data) => {
         transformedData[month].push(item);
     });
 
-    const result = Object.keys(transformedData).map(month => ({
-        label: month,
-        days: transformedData[month]
-    }));
+    const result = Object.keys(transformedData)
+        .map(month => ({
+            label: month,
+            days: transformedData[month]
+        }))
+        .filter(monthGroup => monthGroup.days.length > 0)
+        .sort((a, b) => {
+            const dateA = moment(a.label, 'MM.YYYY');
+            const dateB = moment(b.label, 'MM.YYYY');
+            return dateB - dateA;
+        });
 
     return result;
 };

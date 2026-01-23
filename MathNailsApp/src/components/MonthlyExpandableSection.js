@@ -14,7 +14,7 @@ const MonthlyExpandableSection = ({ monthlyData }) => {
 
     return (
         <View style={{ marginBottom: 16 }}>
-            {monthlyData && (
+            {monthlyData && monthlyData.days && monthlyData.days.length > 0 && (
                 <View key={monthlyData.label}>
                     <TouchableOpacity
                         onPress={() => setExpandedMonth(expandedMonth === monthlyData.label ? null : monthlyData.label)}

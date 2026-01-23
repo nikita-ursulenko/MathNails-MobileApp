@@ -50,7 +50,7 @@ const MainScreen = () => {
     return acc;
   }, { cost: 0, netProfit: 0, tips: 0 });
 
-  const transformedData = transformData(data);
+  const transformedData = transformData(filteredTotalsData);
 
   const SummaryCard = ({ title, value, icon, color }) => (
     <View style={{

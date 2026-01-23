@@ -137,6 +137,11 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
             formattedDate
         };
 
+        if (!service || !service.name) {
+            alert('Пожалуйста, выберите услугу');
+            return;
+        }
+
         if (isAddMode) {
             await onAdd(data);
         } else {
@@ -204,7 +209,7 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
                 <View style={{ flexDirection: 'row', marginBottom: 12, backgroundColor: theme === 'dark' ? '#1E293B' : '#F1F5F9', borderRadius: 12, padding: 4 }}>
                     <TouchableOpacity
                         onPress={() => {
-                            setService({ category: 'Manicure' });
+                            setService(prev => ({ ...prev, category: 'Manicure' }));
                             setSelectedService(null);
                         }}
                         style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: (service?.category === 'Manicure' || !service?.category) ? '#6366F1' : 'transparent', borderRadius: 10 }}
@@ -213,7 +218,7 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => {
-                            setService({ category: 'Pedicure' });
+                            setService(prev => ({ ...prev, category: 'Pedicure' }));
                             setSelectedService(null);
                         }}
                         style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: service?.category === 'Pedicure' ? '#6366F1' : 'transparent', borderRadius: 10 }}

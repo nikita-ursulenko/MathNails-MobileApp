@@ -10,6 +10,8 @@ import 'moment/locale/ru';
 //style
 import { useTheme } from '../../context/ThemeProvider';
 import { darkTheme, lightTheme } from '../../assets/styles/styles';
+import { useData } from '../../context/DataContext';
+import { loadDataFromDB } from '../utils/dataHelpers';
 moment.locale('ru');
 
 // Компонент развернутого раздела
@@ -143,6 +145,7 @@ const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [appointmentData, setAppointmentData] = useState({});
   const [isAddMode, setIsAddMode] = useState(false);
+  const { updateData } = useData();
 
   //style 
   const themeContext = useTheme();
@@ -205,21 +208,22 @@ const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
     console.log('Deleted item:', date, index);
     await DataBase.WorkDone.deleteItemFromDB(date, index);
     setShowModal(false);
-    if (reloadMainScreen) reloadMainScreen();
+    await updateData(loadDataFromDB);
     loadWorkDone();
   };
-  // Ручное добавление данных
   const handleAdd = async (data) => {
     // Здесь вы можете использовать полученные данные
     console.log('Received data:', data);
     await DataBase.WorkDone.saveDataToDB(data);
-    // Reload handled in closeModal via reloadMainScreen
+    await updateData(loadDataFromDB);
+    loadWorkDone();
   };
   // Ручное изменение
   const handleEdit = async (updatedData) => {
     try {
       await DataBase.WorkDone.updateItemInDB(appointmentData.selectedDate, appointmentData.selectedIndex, updatedData);
-      // Reload handled in closeModal via reloadMainScreen
+      await updateData(loadDataFromDB);
+      loadWorkDone();
     } catch (error) {
       console.error('Failed to update data:', error);
     }
@@ -277,16 +281,18 @@ const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
 
         {isExpanded && (
           <View style={{ paddingTop: 12 }}>
-            {dates.map((date) => (
-              <ExpandableSection
-                key={date}
-                title={date}
-                data={workDone[date]}
-                setSelectedDate={setSelectedDate}
-                setSelectedIndex={setSelectedIndex}
-                setShowModal={setShowModal}
-              />
-            ))}
+            {dates
+              .filter(date => workDone[date] && workDone[date].length > 0)
+              .map((date) => (
+                <ExpandableSection
+                  key={date}
+                  title={date}
+                  data={workDone[date]}
+                  setSelectedDate={setSelectedDate}
+                  setSelectedIndex={setSelectedIndex}
+                  setShowModal={setShowModal}
+                />
+              ))}
           </View>
         )}
       </View>

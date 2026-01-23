@@ -137,9 +137,26 @@ export default class DataBase {
         const workDoneString = await AsyncStorage.getItem('workDone');
         let workDone = workDoneString ? JSON.parse(workDoneString) : {};
 
+        // Фильтруем пустые даты и проверяем нужно ли обновить хранилище
+        const filteredWorkDone = {};
+        let needsCleanup = false;
+        Object.keys(workDone).forEach(key => {
+          if (Array.isArray(workDone[key]) && workDone[key].length > 0) {
+            filteredWorkDone[key] = workDone[key];
+          } else {
+            needsCleanup = true;
+          }
+        });
+
+        // Если нашли пустые записи, чистим базу "на лету"
+        if (needsCleanup) {
+          await AsyncStorage.setItem('workDone', JSON.stringify(filteredWorkDone));
+          console.log('Database cleaned from empty entries');
+        }
+
         // Преобразование даты для корректной сортировки
         const sortedWorkDone = {};
-        Object.keys(workDone)
+        Object.keys(filteredWorkDone)
           .sort((a, b) => {
             const dateA = new Date(
               parseInt(a.slice(-2)),
@@ -154,7 +171,7 @@ export default class DataBase {
             return dateB - dateA;
           })
           .forEach((key) => {
-            sortedWorkDone[key] = workDone[key];
+            sortedWorkDone[key] = filteredWorkDone[key];
           });
 
         return sortedWorkDone;
@@ -172,7 +189,9 @@ export default class DataBase {
 
         if (workDone[date] && workDone[date].length > index) {
           workDone[date].splice(index, 1);
-
+          if (workDone[date].length === 0) {
+            delete workDone[date];
+          }
           await AsyncStorage.setItem('workDone', JSON.stringify(workDone));
           console.log('Item deleted successfully!');
         } else {
