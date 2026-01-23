@@ -75,12 +75,17 @@ const SwipeableModal = ({ visible, onClose, children }) => {
                         className={`absolute bottom-0 w-full h-[90%] rounded-t-3xl shadow-2xl elevation-20 ${theme === 'dark' ? 'bg-slate-800 shadow-black' : 'bg-white shadow-black'}`}
                         style={{ transform: [{ translateY }] }}
                     >
-                        <View {...panResponder.panHandlers} className="w-full items-center py-3">
-                            <View className={`w-9 h-1.5 rounded-full ${theme === 'dark' ? 'bg-slate-600' : 'bg-slate-300'}`} />
-                        </View>
-                        <View className="flex-1 px-5">
-                            {children}
-                        </View>
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                            style={{ flex: 1 }}
+                        >
+                            <View {...panResponder.panHandlers} className="w-full items-center py-3">
+                                <View className={`w-9 h-1.5 rounded-full ${theme === 'dark' ? 'bg-slate-600' : 'bg-slate-300'}`} />
+                            </View>
+                            <View className="flex-1 px-5">
+                                {children}
+                            </View>
+                        </KeyboardAvoidingView>
                     </Animated.View>
                 </View>
             </TouchableWithoutFeedback>

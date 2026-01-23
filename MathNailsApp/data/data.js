@@ -8,7 +8,7 @@ export async function updateMasterData(firstName, lastName, commissionRate) {
     lastName: lastName,
     commissionRate: commissionRate,
   };
-  
+
   try {
     await AsyncStorage.setItem('masterData', JSON.stringify(masterData));
     console.log('Master data saved successfully.');
@@ -23,47 +23,35 @@ export default class DataBase {
   // Класс для работы с услугами
   static Services = class {
     // Функция для проверки входных данных услуги
-    static validateServiceInput(serviceName, servicePrice) {
+    static validateServiceInput(serviceName, servicePrice, serviceCategory) {
       if (!serviceName && !servicePrice) {
         throw new Error('serviceName and servicePrice should not be empty.');
-      } else if (!serviceName) { // Если отсутствует название услуги
+      } else if (!serviceName) {
         throw new Error('serviceName should not be empty.');
-      } else if (!servicePrice || isNaN(servicePrice)) { // Если отсутствует цена услуги или она не является числом
+      } else if (!servicePrice || isNaN(servicePrice)) {
         throw new Error('servicePrice should be a valid number and should not be empty.');
+      } else if (!serviceCategory) {
+        throw new Error('serviceCategory should not be empty.');
       }
     }
 
     // Функция для добавления новой услуги
-    static async addService(serviceName, servicePrice) {
+    static async addService(serviceName, servicePrice, serviceCategory) {
       try {
-        // Проверяем входные данные перед добавлением новой услуги
-        this.validateServiceInput(serviceName, servicePrice);
-
-        // Получаем текущий список услуг из AsyncStorage
+        this.validateServiceInput(serviceName, servicePrice, serviceCategory);
         const currentServices = await this.getAllServices();
-
-        // Находим максимальный идентификатор из существующих записей
-        const maxId = currentServices.reduce((max, service) => {
-          return Math.max(max, service.id);
-        }, 0);
-
-        // Генерируем новый уникальный идентификатор
+        const maxId = currentServices.reduce((max, service) => Math.max(max, service.id), 0);
         const newId = maxId + 1;
 
-        // Создаем объект новой услуги
         const newService = {
           id: newId,
           name: serviceName,
-          cost: +servicePrice, // Преобразуем в число
+          cost: +servicePrice,
+          category: serviceCategory, // 'Manicure' or 'Pedicure'
         };
 
-        // Обновляем список услуг, добавляя новую услугу
         const updatedServices = [...currentServices, newService];
-
-        // Сохраняем обновленный список услуг в AsyncStorage
         await AsyncStorage.setItem(SERVICES_STORAGE_KEY, JSON.stringify(updatedServices));
-
-        // Возвращаем обновленный список услуг
         return updatedServices;
       } catch (error) {
         console.error('Error adding service:', error);
@@ -74,13 +62,8 @@ export default class DataBase {
     // Функция для получения всех услуг из AsyncStorage
     static async getAllServices() {
       try {
-        // Получаем данные услуг из AsyncStorage
         const servicesJson = await AsyncStorage.getItem(SERVICES_STORAGE_KEY);
-        // Если данные есть, парсим их из JSON
-        const services = servicesJson ? JSON.parse(servicesJson) : [];
-
-        // Возвращаем список услуг
-        return services;
+        return servicesJson ? JSON.parse(servicesJson) : [];
       } catch (error) {
         console.error('Error getting services:', error);
         throw error;
@@ -90,16 +73,9 @@ export default class DataBase {
     // Функция для удаления услуги по идентификатору
     static async deleteServiceById(id) {
       try {
-        // Получаем текущий список услуг из AsyncStorage
         const currentServices = await this.getAllServices();
-
-        // Фильтруем список, оставляя только те услуги, чей id не совпадает с переданным id
         const updatedServices = currentServices.filter(service => service.id !== id);
-
-        // Сохраняем обновленный список услуг в AsyncStorage
         await AsyncStorage.setItem(SERVICES_STORAGE_KEY, JSON.stringify(updatedServices));
-
-        // Возвращаем обновленный список услуг после удаления
         return updatedServices;
       } catch (error) {
         console.error('Error deleting service:', error);
@@ -108,32 +84,21 @@ export default class DataBase {
     }
 
     // Функция для обновления услуги по идентификатору
-    static async updateServiceById(id, serviceName, servicePrice) {
+    static async updateServiceById(id, serviceName, servicePrice, serviceCategory) {
       try {
-        // Проверяем входные данные перед обновлением услуги
-        this.validateServiceInput(serviceName, servicePrice);
-
-        // Получаем текущий список услуг из AsyncStorage
+        this.validateServiceInput(serviceName, servicePrice, serviceCategory);
         const currentServices = await this.getAllServices();
-
-        // Находим индекс услуги в списке по ее id
         const serviceIndex = currentServices.findIndex(service => service.id === id);
 
         if (serviceIndex !== -1) {
-          // Создаем обновленную версию услуги
           const updatedService = {
-            id: id,
+            id,
             name: serviceName,
             cost: +servicePrice,
+            category: serviceCategory,
           };
-
-          // Обновляем услугу в списке
           currentServices[serviceIndex] = updatedService;
-
-          // Сохраняем обновленный список услуг в AsyncStorage
           await AsyncStorage.setItem(SERVICES_STORAGE_KEY, JSON.stringify(currentServices));
-
-          // Возвращаем обновленный список услуг после обновления
           return currentServices;
         } else {
           throw new Error(`Service with id ${id} not found.`);
@@ -217,13 +182,13 @@ export default class DataBase {
         console.error('Error deleting item:', error);
       }
     }
-    
+
     //Изменение данных
     static async updateItemInDB(originalDate, index, newData) {
       try {
         const workDoneString = await AsyncStorage.getItem('workDone');
         let workDone = workDoneString ? JSON.parse(workDoneString) : {};
-    
+
         // Проверка, существует ли запись для исходной даты и данного индекса
         if (workDone[originalDate] && workDone[originalDate][index]) {
           // Удаление старой записи
@@ -231,14 +196,14 @@ export default class DataBase {
           if (workDone[originalDate].length === 0) {
             delete workDone[originalDate]; // Удаляем пустой массив для даты, если больше нет записей
           }
-    
+
           // Добавление записи к новой дате
           const newDate = newData.formattedDate;
           if (!workDone[newDate]) {
             workDone[newDate] = [];
           }
           workDone[newDate].push(newData);
-    
+
           // Сохранение обновленных данных
           await AsyncStorage.setItem('workDone', JSON.stringify(workDone));
           console.log('Data updated successfully!');
@@ -250,7 +215,7 @@ export default class DataBase {
         throw error;
       }
     }
-    
+
     // Очистка данных из базы данных
     static async clearDataFromDB() {
       try {

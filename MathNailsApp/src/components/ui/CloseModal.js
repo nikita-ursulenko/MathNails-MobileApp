@@ -9,7 +9,7 @@ const CloseModal = ({ onPress }) => {
             className="absolute z-10 top-12 right-5"
             onPress={onPress}
         >
-            <AntDesign name="closecircle" size={40} color="red" />
+            <AntDesign name="close" size={40} color="red" />
         </TouchableOpacity>
     );
 };

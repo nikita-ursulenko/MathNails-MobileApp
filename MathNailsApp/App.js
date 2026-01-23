@@ -9,7 +9,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import GeneralScreen from './src/screens/GeneralScreen';
 import EntryScreen from './src/screens/EntryScreen';
 import ServicesScreen from './src/screens/ServicesScreen';
-import StaticScreen from './src/screens/StaticScreen';
+
 import { ThemeProvider, useTheme } from './context/ThemeProvider';
 import { ProfileProvider } from './context/ProfileContext';
 import { darkTheme, lightTheme } from './assets/styles/styles';
@@ -50,8 +50,7 @@ function MainApp() {
               iconName = focused ? 'list' : 'list-outline';
             } else if (route.name === 'Entry') {
               iconName = focused ? 'add-circle' : 'add-circle-outline';
-            } else if (route.name === 'Static') {
-              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+
             } else if (route.name === 'Settings') {
               iconName = focused ? 'settings' : 'settings-outline';
             } else if (route.name === 'Profil') {
@@ -80,11 +79,7 @@ function MainApp() {
           component={ServicesScreen}
           options={{ title: "Услуги" }}
         />
-        <Tab.Screen
-          name='Static'
-          component={StaticScreen}
-          options={{ title: "Статистика" }}
-        />
+
         <Tab.Screen
           name='Profil'
           component={ProfilScreen}

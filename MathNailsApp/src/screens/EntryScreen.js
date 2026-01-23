@@ -77,7 +77,7 @@ const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, set
           {data.map((appointment, index) => {
             const serviceName = appointment.service?.name || "Услуга";
             const cost = appointment.cost || "0";
-            const isBar = appointment.paymentMethod === 'Bar';
+            const isBar = (appointment.paymentMethod || '').trim().toLowerCase() === 'bar';
 
             return (
               <TouchableOpacity
@@ -135,7 +135,7 @@ const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, set
   );
 };
 
-const EntryScreen = () => {
+const EntryScreen = ({ reloadMainScreen, showAddButton = true }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [workDone, setWorkDone] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -150,28 +150,32 @@ const EntryScreen = () => {
   const styles = theme === 'dark' ? darkTheme : lightTheme;
 
 
-  useEffect(() => {
-    const loadWorkDone = async () => {
-      try {
-        const workDoneData = await DataBase.WorkDone.getDataFromDB();
-        if (workDoneData) {
-          const sortedWorkDone = Object.keys(workDoneData)
-            .sort((a, b) => new Date(b) - new Date(a))
-            .reduce((acc, key) => {
-              acc[key] = workDoneData[key];
-              return acc;
-            }, {});
-          setWorkDone(sortedWorkDone);
-        } else {
-          console.log('No data found in the database.');
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
+  const loadWorkDone = async () => {
+    try {
+      const workDoneData = await DataBase.WorkDone.getDataFromDB();
+      if (workDoneData) {
+        const sortedWorkDone = Object.keys(workDoneData)
+          .sort((a, b) => {
+            const [dayA, monthA, yearA] = a.split('.').map(Number);
+            const [dayB, monthB, yearB] = b.split('.').map(Number);
+            const dateA = new Date(2000 + yearA, monthA - 1, dayA);
+            const dateB = new Date(2000 + yearB, monthB - 1, dayB);
+            return dateB - dateA;
+          })
+          .reduce((acc, key) => {
+            acc[key] = workDoneData[key];
+            return acc;
+          }, {});
+        setWorkDone(sortedWorkDone);
       }
-    };
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
 
+  useEffect(() => {
     loadWorkDone();
-  }, []);
+  }, [reloadMainScreen]);
 
   // Состояние модального окна
   const openModalAdd = () => {
@@ -182,6 +186,8 @@ const EntryScreen = () => {
   const closeModal = () => {
     setIsModalVisible(false);
     setIsAddMode(false);
+    if (reloadMainScreen) reloadMainScreen();
+    loadWorkDone();
   };
 
   const handleEditItem = (selectedDate, selectedIndex) => {
@@ -196,11 +202,10 @@ const EntryScreen = () => {
   };
   //Ручное удаление данных
   const handleDeleteItem = async (date, index) => {
-    // Удаление элемента из базы данных по индексу
-    // Обновление данных на экране
     console.log('Deleted item:', date, index);
     await DataBase.WorkDone.deleteItemFromDB(date, index);
     setShowModal(false);
+    if (reloadMainScreen) reloadMainScreen();
     loadWorkDone();
   };
   // Ручное добавление данных
@@ -208,44 +213,103 @@ const EntryScreen = () => {
     // Здесь вы можете использовать полученные данные
     console.log('Received data:', data);
     await DataBase.WorkDone.saveDataToDB(data);
-    loadWorkDone();
-
+    // Reload handled in closeModal via reloadMainScreen
   };
   // Ручное изменение
   const handleEdit = async (updatedData) => {
     try {
       await DataBase.WorkDone.updateItemInDB(appointmentData.selectedDate, appointmentData.selectedIndex, updatedData);
-      loadWorkDone(); // Вызов для перезагрузки данных
+      // Reload handled in closeModal via reloadMainScreen
     } catch (error) {
       console.error('Failed to update data:', error);
     }
   };
-  // Removed CustomModal hook usage as we now use EntryModal component directly
-  // Загрузка данных из ДБ
-  const loadWorkDone = async () => {
-    const workDoneList = await DataBase.WorkDone.getDataFromDB();
-    if (workDoneList) {
-      console.log('Work done:', workDoneList);
-      setWorkDone(workDoneList);
-    } else {
-      console.log('No data found in the database.');
-    }
+
+
+  // Grouping data by months for rendering
+  const groupedByMonth = Object.keys(workDone).reduce((acc, date) => {
+    const monthLabel = moment(date, 'DD.MM.YY').format('MMMM YYYY');
+    if (!acc[monthLabel]) acc[monthLabel] = [];
+    acc[monthLabel].push(date);
+    return acc;
+  }, {});
+
+  // Sort months (newest first)
+  const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => {
+    return moment(b, 'MMMM YYYY').diff(moment(a, 'MMMM YYYY'));
+  });
+
+  const MonthlySection = ({ monthLabel, dates }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    return (
+      <View style={{ marginBottom: 16 }}>
+        <TouchableOpacity
+          onPress={() => setIsExpanded(!isExpanded)}
+          style={[styles.sectionHeader, {
+            backgroundColor: theme === 'dark' ? '#1E293B' : '#FFFFFF',
+            borderRadius: 16,
+            paddingVertical: 16,
+            paddingHorizontal: 20,
+            borderWidth: 0,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }]}
+        >
+          <Text style={[styles.headerText, {
+            fontWeight: '700',
+            color: theme === 'dark' ? 'white' : '#1E293B',
+            textTransform: 'capitalize'
+          }]}>
+            {monthLabel}
+          </Text>
+          <AntDesign
+            name={isExpanded ? "up" : "down"}
+            size={20}
+            color={theme === 'dark' ? "#94A3B8" : "#64748B"}
+          />
+        </TouchableOpacity>
+
+        {isExpanded && (
+          <View style={{ paddingTop: 12 }}>
+            {dates.map((date) => (
+              <ExpandableSection
+                key={date}
+                title={date}
+                data={workDone[date]}
+                setSelectedDate={setSelectedDate}
+                setSelectedIndex={setSelectedIndex}
+                setShowModal={setShowModal}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+    );
   };
 
   return (
     <View style={styles.container} animationType="slide">
-      <ScrollView>
-        <View style={styles.container}>
-          {Object.keys(workDone).map((date) => (
-            <ExpandableSection
-              key={date}
-              title={date}
-              data={workDone[date]}
-              setSelectedDate={setSelectedDate}
-              setSelectedIndex={setSelectedIndex}
-              setShowModal={setShowModal}
-            />
-          ))}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <View style={{ paddingHorizontal: 15, paddingTop: 10 }}>
+          {sortedMonths.length > 0 ? (
+            sortedMonths.map(month => (
+              <MonthlySection
+                key={month}
+                monthLabel={month}
+                dates={groupedByMonth[month]}
+              />
+            ))
+          ) : (
+            <View style={{ alignItems: 'center', marginTop: 50 }}>
+              <Text style={{ color: '#64748B' }}>Нет записей за этот период</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
       <EntryModal
@@ -256,7 +320,7 @@ const EntryScreen = () => {
         isAddMode={isAddMode}
         appointmentData={{ selectedDate, selectedIndex, workDone }}
       />
-      <AddButton onPress={openModalAdd} />
+      {showAddButton && <AddButton onPress={openModalAdd} />}
       <ModalDialog
         visible={showModal}
         onClose={() => { setShowModal(false); }}

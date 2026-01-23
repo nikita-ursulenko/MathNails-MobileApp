@@ -19,40 +19,44 @@ export const loadDataFromDB = async () => {
         const commissionRate = await getCommissionRate();
 
         const formattedData = Object.keys(data).map(date => {
-            let cost = 0,
-                tips = 0,
+            let totalCost = 0,
+                totalTips = 0,
                 myBar = 0,
                 moneySalon = 0,
                 earnings = 0;
+
             data[date].forEach(item => {
-                const itemCost = parseFloat(item.cost);
-                const itemTips = parseFloat(item.notes || '0');
-                cost += itemCost;
-                tips += itemTips;
+                const itemCost = parseFloat(item.cost || '0') || 0;
+                const itemTips = parseFloat(item.notes || '0') || 0;
+
+                totalCost += itemCost;
+                totalTips += itemTips;
                 earnings += itemCost * commissionRate;
 
-                if (item.paymentMethod === 'Bar' && item.person === '') {
+                const payment = (item.paymentMethod || '').trim().toLowerCase();
+                // Проверяем на 'bar' или 'наличные'
+                if (payment === 'bar' || payment === 'наличные') {
                     myBar += itemCost;
-                } else if (item.paymentMethod === 'Card' || item.person !== '') {
+                } else {
                     moneySalon += itemCost;
                 }
             });
 
-            const netProfit = earnings + tips;
+            const netProfit = earnings + totalTips;
             const debt = myBar - earnings;
             let debtStatus;
             if (debt > 0) {
-                debtStatus = 'Долг мастера'; // Мы должны салону
+                debtStatus = 'Долг мастера';
             } else if (debt < 0) {
-                debtStatus = 'Долг салона'; // Нам должен салон
+                debtStatus = 'Долг салона';
             } else {
-                debtStatus = 'Никто никому не должен'; // Никто никому не должен
+                debtStatus = 'Никто никому не должен';
             }
 
             return {
                 date,
-                cost,
-                tips,
+                cost: totalCost,
+                tips: totalTips,
                 earnings,
                 netProfit,
                 myBar,
@@ -62,7 +66,11 @@ export const loadDataFromDB = async () => {
             };
         });
 
-        return formattedData.sort((a, b) => moment(b.date, 'DD.MM.YY') - moment(a.date, 'DD.MM.YY'));
+        return formattedData.sort((a, b) => {
+            const dateA = moment(a.date, 'DD.MM.YY');
+            const dateB = moment(b.date, 'DD.MM.YY');
+            return dateB - dateA;
+        });
     } catch (e) {
         console.error('Failed to load data', e);
         return [];

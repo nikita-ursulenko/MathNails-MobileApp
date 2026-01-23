@@ -124,7 +124,7 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
         setShowDatePicker(!showDatePicker);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const data = {
             service,
             cost,
@@ -138,9 +138,9 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
         };
 
         if (isAddMode) {
-            onAdd(data);
+            await onAdd(data);
         } else {
-            onEdit(data);
+            await onEdit(data);
         }
 
         onClose();
@@ -200,10 +200,33 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
                     onPressIn={togglePicker}
                 />
 
+                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Категория</Text>
+                <View style={{ flexDirection: 'row', marginBottom: 12, backgroundColor: theme === 'dark' ? '#1E293B' : '#F1F5F9', borderRadius: 12, padding: 4 }}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setService({ category: 'Manicure' });
+                            setSelectedService(null);
+                        }}
+                        style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: (service?.category === 'Manicure' || !service?.category) ? '#6366F1' : 'transparent', borderRadius: 10 }}
+                    >
+                        <Text style={{ color: (service?.category === 'Manicure' || !service?.category) ? 'white' : '#64748B', fontWeight: '600' }}>Маникюр</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setService({ category: 'Pedicure' });
+                            setSelectedService(null);
+                        }}
+                        style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: service?.category === 'Pedicure' ? '#6366F1' : 'transparent', borderRadius: 10 }}
+                    >
+                        <Text style={{ color: service?.category === 'Pedicure' ? 'white' : '#64748B', fontWeight: '600' }}>Педикюр</Text>
+                    </TouchableOpacity>
+                </View>
+
                 {showSelectedPicker && (
                     <Modal transparent={true} animationType="fade">
                         <View style={styles.centerStyle}>
                             <View style={{ backgroundColor: theme === 'dark' ? '#1E293B' : 'white', borderRadius: 24, padding: 20, width: '90%' }}>
+                                <Text style={[styles.text, { fontSize: 18, fontWeight: '700', marginBottom: 12, textAlign: 'center' }]}>Выберите услугу</Text>
                                 <Picker
                                     selectedValue={selectedService}
                                     onValueChange={(itemValue) => {
@@ -214,17 +237,21 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
                                             setCost(selected.cost.toString());
                                         }
                                     }}>
-                                    {renderServiceItems()}
+                                    <Picker.Item label="--- Выберите ---" value={null} color={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                                    {services
+                                        .filter(s => {
+                                            const activeCat = (service?.category || 'Manicure');
+                                            return (s.category || 'Manicure') === activeCat;
+                                        })
+                                        .map((s, index) => (
+                                            <Picker.Item key={index} label={`${s.name} (${s.cost}€)`} value={s.id} color={theme === 'dark' ? 'white' : 'black'} />
+                                        ))
+                                    }
                                 </Picker>
                                 <ButtonSpecial
                                     title={"Подтвердить"}
                                     onPress={() => {
                                         setShowSelectedPicker(false);
-                                        if (!selectedService && services.length > 0) {
-                                            setSelectedService(services[0].id);
-                                            setService(services[0]);
-                                            setCost(services[0].cost.toString());
-                                        }
                                     }}
                                 />
                             </View>
@@ -232,10 +259,10 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
                     </Modal>
                 )}
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Услуга</Text>
+                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 4 }]}>Услуга</Text>
                 <TextInput
                     style={[styles.text, styles.input]}
-                    placeholder="Выберите услугу"
+                    placeholder="Нажмите для выбора"
                     placeholderTextColor="#94A3B8"
                     value={service ? service.name : ''}
                     onPressIn={() => setShowSelectedPicker(true)}

@@ -1,7 +1,7 @@
 // GeneralScreen.js
 
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, RefreshControl, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, FlatList, RefreshControl, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loadDataFromDB, transformData } from '../utils/dataHelpers';
 import ExpandableSection from '../components/ExpandableSection';
@@ -20,6 +20,7 @@ moment.locale('ru');
 
 const MainScreen = () => {
   const { data, updateData } = useData();
+  const [activeTab, setActiveTab] = useState(7);
   const [refreshing, setRefreshing] = useState(false);
   const themeContext = useTheme();
   const { theme } = themeContext;
@@ -35,7 +36,14 @@ const MainScreen = () => {
     setRefreshing(false);
   };
 
-  const totals = data.reduce((acc, curr) => {
+  // Filter data based on selected tab
+  const filteredTotalsData = data.filter(item => {
+    const itemDate = moment(item.date, 'DD.MM.YY');
+    const diffDays = moment().diff(itemDate, 'days');
+    return diffDays < activeTab;
+  });
+
+  const totals = filteredTotalsData.reduce((acc, curr) => {
     acc.cost += curr.cost;
     acc.netProfit += curr.netProfit;
     acc.tips += curr.tips;
@@ -64,6 +72,27 @@ const MainScreen = () => {
     </View>
   );
 
+  const TabButton = ({ value, label }) => (
+    <TouchableOpacity
+      onPress={() => setActiveTab(value)}
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 12,
+        backgroundColor: activeTab === value ? '#6366F1' : (theme === 'dark' ? '#1E293B' : '#F1F5F9'),
+        marginRight: 8,
+      }}
+    >
+      <Text style={{
+        color: activeTab === value ? 'white' : (theme === 'dark' ? '#94A3B8' : '#64748B'),
+        fontSize: 13,
+        fontWeight: '600'
+      }}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: theme === 'dark' ? '#0F172A' : '#F8FAFC' }}>
       <ScrollView
@@ -74,7 +103,16 @@ const MainScreen = () => {
       >
         {/* Dashboard Summary */}
         <View style={{ padding: 20, paddingTop: 10 }}>
-          <Text style={[styles.text, { fontSize: 24, fontWeight: '700', marginBottom: 16 }]}>Ваш Дашборд</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Text style={[styles.text, { fontSize: 24, fontWeight: '700' }]}>Ваш Дашборд</Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', marginBottom: 20 }}>
+            <TabButton value={7} label="7 дней" />
+            <TabButton value={14} label="14 дней" />
+            <TabButton value={30} label="Месяц" />
+          </View>
+
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ paddingBottom: 10 }}>
             <SummaryCard title="Общая выручка" value={totals.cost} color="#6366F1" />
             <SummaryCard title="Чистая прибыль" value={totals.netProfit} color="#22C55E" />
@@ -96,7 +134,7 @@ const MainScreen = () => {
           )}
         </View>
       </ScrollView>
-      <EntryScreen reloadMainScreen={onRefresh} />
+
     </View>
   );
 };
