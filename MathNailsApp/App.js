@@ -1,21 +1,22 @@
-import {useState, useEffect, useRef} from 'react';
+import './src/global.css';
+import { useState, useEffect, useRef } from 'react';
 import { Image, View, Text, StatusBar } from 'react-native';
-import 'react-native-gesture-handler';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import ProfilScreen from './screens/ProfilScreen';
-import SettingsScreen from './screens/SettingsScreen';
-import GeneralScreen from './screens/GeneralScreen';
-import EntryScreen from './screens/EntryScreen';
-import ServicesScreen from './screens/ServicesScreen';
-import StaticScreen from './screens/StaticScreen';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import ProfilScreen from './src/screens/ProfilScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+import GeneralScreen from './src/screens/GeneralScreen';
+import EntryScreen from './src/screens/EntryScreen';
+import ServicesScreen from './src/screens/ServicesScreen';
+import StaticScreen from './src/screens/StaticScreen';
 import { ThemeProvider, useTheme } from './context/ThemeProvider';
-import { ProfileProvider } from './context/ProfileContext'; 
+import { ProfileProvider } from './context/ProfileContext';
 import { darkTheme, lightTheme } from './assets/styles/styles';
-import { ProfileIconWithDescription } from './components/ProfileIconWithDescription';
+import { ProfileIconWithDescription } from './src/components/ProfileIconWithDescription';
 import { DataProvider } from './context/DataContext';
 
-const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
@@ -37,42 +38,64 @@ function MainApp() {
       <StatusBar
         barStyle={theme === 'dark' ? "light-content" : "dark-content"}
       />
-      <Drawer.Navigator initialRouteName="General">
-        <Drawer.Screen 
-          name='Profil' 
-          component={ProfilScreen} 
-          options={{
-            title: "Профиль",
-            drawerLabel: "",
-            drawerIcon: () => <ProfileIconWithDescription />,
-          }}
-        />
-        <Drawer.Screen 
-          name='General' 
+      <Tab.Navigator
+        initialRouteName="General"
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === 'General') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'Services') {
+              iconName = focused ? 'list' : 'list-outline';
+            } else if (route.name === 'Entry') {
+              iconName = focused ? 'add-circle' : 'add-circle-outline';
+            } else if (route.name === 'Static') {
+              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+            } else if (route.name === 'Settings') {
+              iconName = focused ? 'settings' : 'settings-outline';
+            } else if (route.name === 'Profil') {
+              iconName = focused ? 'person' : 'person-outline';
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#6366f1',
+          tabBarInactiveTintColor: 'gray',
+          headerShown: true, // Keep headers visible as per standard iOS/Android patterns
+        })}
+      >
+        <Tab.Screen
+          name='General'
           component={GeneralScreen}
           options={{ title: "Главная" }}
         />
-        <Drawer.Screen 
-          name='Entry' 
+        <Tab.Screen
+          name='Entry'
           component={EntryScreen}
-          options={{ title: "Ввод данных" }}
+          options={{ title: "Ввод" }}
         />
-        <Drawer.Screen 
-          name='Services' 
-          component={ServicesScreen} 
+        <Tab.Screen
+          name='Services'
+          component={ServicesScreen}
           options={{ title: "Услуги" }}
         />
-        <Drawer.Screen 
-          name='Static' 
-          component={StaticScreen} 
+        <Tab.Screen
+          name='Static'
+          component={StaticScreen}
           options={{ title: "Статистика" }}
         />
-        <Drawer.Screen
-          name='Settings' 
-          component={SettingsScreen} 
+        <Tab.Screen
+          name='Profil'
+          component={ProfilScreen}
+          options={{ title: "Профиль" }}
+        />
+        <Tab.Screen
+          name='Settings'
+          component={SettingsScreen}
           options={{ title: "Настройки" }}
         />
-      </Drawer.Navigator>
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }
