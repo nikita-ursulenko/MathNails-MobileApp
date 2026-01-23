@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 
 import DataBase from '../../../data/data';
 import { useTheme } from '../../../context/ThemeProvider';
-import { darkThemeComponents, lightThemeComponents } from '../../../assets/styles/StylesComponents';
-
 import SwipeableModal from '../ui/SwipeableModal';
-import ButtonSpecial from '../ui/ButtonSpecial';
+import Button from '../ui/Button';
+import { getColors, typography, spacing, borderRadius, shadows } from '../../theme';
 
 const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMode }) => {
     const [service, setService] = useState('');
@@ -30,9 +29,8 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
     const [payWithCard, setPayWithCard] = useState(false);
     const [person, setPerson] = useState('');
 
-    const themeContext = useTheme();
-    const theme = themeContext?.theme || 'light';
-    const styles = theme === 'dark' ? darkThemeComponents : lightThemeComponents;
+    const { theme } = useTheme();
+    const colors = getColors(theme);
 
     // Initial load
     useEffect(() => {
@@ -53,13 +51,13 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
                 if (appointment) {
                     setService(appointment.service);
                     setSelectedService(appointment.service.id);
-                    setCost(appointment.cost);
+                    setCost(appointment.cost.toString());
                     handlePayMethod(appointment.paymentMethod);
                     setPerson(appointment.person);
                     setNotes(appointment.notes);
                     setClientName(appointment.clientName);
                     setComments(appointment.comments);
-                    setFormattedDate(formatDate(new Date(appointment.date)));
+                    setFormattedDate(appointment.formattedDate || appointmentData.selectedDate);
                     setDate(new Date(appointment.date));
                 }
             }
@@ -149,89 +147,113 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
         }
 
         onClose();
-        // Clearing is handled by useEffect when re-opening in Add mode, 
-        // strictly speaking we don't need to clear on close, but it's safe.
         handleClearInput();
     };
 
-    const renderServiceItems = () => {
-        return services.map((service, index) => (
-            <Picker.Item key={index} label={`${service.name}`} value={service.id} color={theme === 'dark' ? 'white' : 'black'} />
-        ));
-    };
+    const Label = ({ children, style }) => (
+        <Text style={{
+            fontSize: typography.fontSize.caption,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.textSecondary,
+            marginBottom: spacing.xs,
+            marginLeft: spacing.xs,
+            ...style
+        }}>{children}</Text>
+    );
+
+    const Input = (props) => (
+        <TextInput
+            {...props}
+            style={{
+                backgroundColor: colors.surface,
+                borderRadius: borderRadius.md,
+                padding: spacing.md,
+                fontSize: typography.fontSize.body,
+                color: colors.text,
+                borderWidth: 1,
+                borderColor: colors.border,
+                marginBottom: spacing.base,
+                ...props.style
+            }}
+            placeholderTextColor={colors.textTertiary}
+        />
+    );
 
     return (
         <SwipeableModal
             visible={visible}
             onClose={() => { onClose(); handleClearInput(); }}
-            styles={styles}
             theme={theme}
         >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: 20 }}>
-                <Text style={[styles.text, { fontSize: 24, fontWeight: '700' }]}>{isAddMode ? "Новая запись" : "Изменить запись"}</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg }}>
+                <Text style={{ fontSize: typography.fontSize.h2, fontWeight: typography.fontWeight.extrabold, color: colors.text }}>
+                    {isAddMode ? "Новая запись" : "Изменить запись"}
+                </Text>
                 <TouchableOpacity onPress={() => { onClose(); handleClearInput(); }}>
-                    <AntDesign name="close" size={28} color={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                    <Ionicons name="close-circle" size={28} color={colors.textTertiary} />
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ width: '100%' }} showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xl }}>
                 {showDatePicker && (
                     <Modal transparent={true} animationType="fade">
-                        <View style={styles.centerStyle}>
-                            <View style={{ backgroundColor: theme === 'dark' ? '#1E293B' : 'white', borderRadius: 24, padding: 20, width: '90%' }}>
+                        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                            <View style={{ backgroundColor: colors.surface, borderRadius: borderRadius.xl, padding: spacing.lg, width: '90%', ...shadows.lg }}>
                                 <DateTimePicker
-                                    textColor={theme === 'dark' ? 'white' : 'black'}
+                                    textColor={colors.text}
                                     testID="dateTimePicker"
                                     value={date}
                                     mode="date"
                                     display="spinner"
                                     onChange={(event, selectedDate) => onChangeDate(selectedDate)}
                                 />
-                                <ButtonSpecial
+                                <Button
                                     title="Подтвердить"
+                                    variant="primary"
                                     onPress={() => { togglePicker(); }}
-                                    style={{ marginTop: 20 }}
+                                    style={{ marginTop: spacing.md }}
                                 />
                             </View>
                         </View>
                     </Modal>
                 )}
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4 }]}>Дата</Text>
-                <TextInput
-                    style={[styles.text, styles.input]}
-                    onChangeText={setFormattedDate}
-                    value={formattedDate}
-                    onPressIn={togglePicker}
-                />
+                <Label>Дата</Label>
+                <TouchableOpacity onPress={togglePicker}>
+                    <Input
+                        editable={false}
+                        value={formattedDate}
+                        pointerEvents="none"
+                    />
+                </TouchableOpacity>
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Категория</Text>
-                <View style={{ flexDirection: 'row', marginBottom: 12, backgroundColor: theme === 'dark' ? '#1E293B' : '#F1F5F9', borderRadius: 12, padding: 4 }}>
+                <Label>Категория</Label>
+                <View style={{ flexDirection: 'row', marginBottom: spacing.base, backgroundColor: colors.background, borderRadius: borderRadius.md, padding: spacing.xs, borderWidth: 1, borderColor: colors.border }}>
                     <TouchableOpacity
                         onPress={() => {
                             setService(prev => ({ ...prev, category: 'Manicure' }));
                             setSelectedService(null);
                         }}
-                        style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: (service?.category === 'Manicure' || !service?.category) ? '#6366F1' : 'transparent', borderRadius: 10 }}
+                        style={{ flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: (service?.category === 'Manicure' || !service?.category) ? colors.primary : 'transparent', borderRadius: borderRadius.sm }}
                     >
-                        <Text style={{ color: (service?.category === 'Manicure' || !service?.category) ? 'white' : '#64748B', fontWeight: '600' }}>Маникюр</Text>
+                        <Text style={{ color: (service?.category === 'Manicure' || !service?.category) ? colors.textInverse : colors.textSecondary, fontWeight: typography.fontWeight.semibold }}>Маникюр</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => {
                             setService(prev => ({ ...prev, category: 'Pedicure' }));
                             setSelectedService(null);
                         }}
-                        style={{ flex: 1, paddingVertical: 10, alignItems: 'center', backgroundColor: service?.category === 'Pedicure' ? '#6366F1' : 'transparent', borderRadius: 10 }}
+                        style={{ flex: 1, paddingVertical: spacing.sm, alignItems: 'center', backgroundColor: service?.category === 'Pedicure' ? colors.primary : 'transparent', borderRadius: borderRadius.sm }}
                     >
-                        <Text style={{ color: service?.category === 'Pedicure' ? 'white' : '#64748B', fontWeight: '600' }}>Педикюр</Text>
+                        <Text style={{ color: service?.category === 'Pedicure' ? colors.textInverse : colors.textSecondary, fontWeight: typography.fontWeight.semibold }}>Педикюр</Text>
                     </TouchableOpacity>
                 </View>
 
                 {showSelectedPicker && (
                     <Modal transparent={true} animationType="fade">
-                        <View style={styles.centerStyle}>
-                            <View style={{ backgroundColor: theme === 'dark' ? '#1E293B' : 'white', borderRadius: 24, padding: 20, width: '90%' }}>
-                                <Text style={[styles.text, { fontSize: 18, fontWeight: '700', marginBottom: 12, textAlign: 'center' }]}>Выберите услугу</Text>
+                        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                            <View style={{ backgroundColor: colors.surface, borderRadius: borderRadius.xl, padding: spacing.lg, width: '90%', ...shadows.lg }}>
+                                <Text style={{ fontSize: typography.fontSize.h4, fontWeight: typography.fontWeight.bold, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>Выберите услугу</Text>
                                 <Picker
                                     selectedValue={selectedService}
                                     onValueChange={(itemValue) => {
@@ -242,115 +264,132 @@ const EntryModal = ({ visible, onClose, onAdd, onEdit, appointmentData, isAddMod
                                             setCost(selected.cost.toString());
                                         }
                                     }}>
-                                    <Picker.Item label="--- Выберите ---" value={null} color={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                                    <Picker.Item label="--- Выберите ---" value={null} color={colors.textTertiary} />
                                     {services
                                         .filter(s => {
                                             const activeCat = (service?.category || 'Manicure');
                                             return (s.category || 'Manicure') === activeCat;
                                         })
                                         .map((s, index) => (
-                                            <Picker.Item key={index} label={`${s.name} (${s.cost}€)`} value={s.id} color={theme === 'dark' ? 'white' : 'black'} />
+                                            <Picker.Item key={index} label={`${s.name} (${s.cost}€)`} value={s.id} color={colors.text} />
                                         ))
                                     }
                                 </Picker>
-                                <ButtonSpecial
+                                <Button
                                     title={"Подтвердить"}
+                                    variant="primary"
                                     onPress={() => {
                                         setShowSelectedPicker(false);
                                     }}
+                                    style={{ marginTop: spacing.md }}
                                 />
                             </View>
                         </View>
                     </Modal>
                 )}
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 4 }]}>Услуга</Text>
-                <TextInput
-                    style={[styles.text, styles.input]}
-                    placeholder="Нажмите для выбора"
-                    placeholderTextColor="#94A3B8"
-                    value={service ? service.name : ''}
-                    onPressIn={() => setShowSelectedPicker(true)}
-                />
+                <Label>Услуга</Label>
+                <TouchableOpacity onPress={() => setShowSelectedPicker(true)}>
+                    <Input
+                        editable={false}
+                        placeholder="Нажмите для выбора"
+                        value={service ? service.name : ''}
+                        pointerEvents="none"
+                    />
+                </TouchableOpacity>
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Стоимость (€)</Text>
-                <TextInput
-                    style={[styles.text, styles.input]}
+                <Label>Стоимость (€)</Label>
+                <Input
                     placeholder="0.00"
-                    placeholderTextColor="#94A3B8"
                     value={cost}
                     onChangeText={setCost}
                     keyboardType="numeric"
                 />
 
-                <View style={[styles.container, { marginVertical: 20 }]}>
+                <Label>Метод оплаты</Label>
+                <View style={{ flexDirection: 'row', gap: spacing.md, marginBottom: spacing.lg }}>
                     <TouchableOpacity
-                        style={[styles.section, { backgroundColor: payWithBar ? 'rgba(34, 197, 94, 0.1)' : '#F1F5F9', flex: 1, marginRight: 8 }]}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: spacing.md,
+                            borderRadius: borderRadius.md,
+                            backgroundColor: payWithBar ? 'rgba(34, 197, 94, 0.1)' : colors.surface,
+                            borderWidth: 1,
+                            borderColor: payWithBar ? '#22C55E' : colors.border,
+                            gap: spacing.sm
+                        }}
                         onPress={() => handlePayMethod('Bar')}
                     >
-                        <Ionicons
-                            name={payWithBar ? 'checkmark-circle' : 'checkmark-circle-outline'}
-                            size={24}
-                            color={payWithBar ? '#22C55E' : '#94A3B8'}
+                        <MaterialCommunityIcons
+                            name={payWithBar ? 'cash-check' : 'cash'}
+                            size={20}
+                            color={payWithBar ? '#166534' : colors.textTertiary}
                         />
-                        <Text style={[styles.paragraph, { color: payWithBar ? '#166534' : '#64748B' }]}>Наличные</Text>
+                        <Text style={{ fontWeight: typography.fontWeight.semibold, color: payWithBar ? '#166534' : colors.textSecondary }}>Наличные</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.section, { backgroundColor: payWithCard ? 'rgba(59, 130, 246, 0.1)' : '#F1F5F9', flex: 1, marginLeft: 8 }]}
+                        style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: spacing.md,
+                            borderRadius: borderRadius.md,
+                            backgroundColor: payWithCard ? 'rgba(59, 130, 246, 0.1)' : colors.surface,
+                            borderWidth: 1,
+                            borderColor: payWithCard ? '#3B82F6' : colors.border,
+                            gap: spacing.sm
+                        }}
                         onPress={() => handlePayMethod('Card')}
                     >
-                        <Ionicons
-                            name={payWithCard ? 'checkmark-circle' : 'checkmark-circle-outline'}
-                            size={24}
-                            color={payWithCard ? '#3B82F6' : '#94A3B8'}
+                        <MaterialCommunityIcons
+                            name={payWithCard ? 'credit-card-check' : 'credit-card'}
+                            size={20}
+                            color={payWithCard ? '#1E40AF' : colors.textTertiary}
                         />
-                        <Text style={[styles.paragraph, { color: payWithCard ? '#1E40AF' : '#64748B' }]}>Терминал</Text>
+                        <Text style={{ fontWeight: typography.fontWeight.semibold, color: payWithCard ? '#1E40AF' : colors.textSecondary }}>Терминал</Text>
                     </TouchableOpacity>
                 </View>
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4 }]}>Имя клиента</Text>
-                <TextInput
-                    style={[styles.text, styles.input]}
+                <Label>Имя клиента</Label>
+                <Input
                     placeholder="Напр. Мария"
-                    placeholderTextColor="#94A3B8"
                     value={clientName}
                     onChangeText={setClientName}
                 />
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Кто принял оплату</Text>
-                <TextInput
-                    style={[styles.text, styles.input]}
+                <Label>Кто принял оплату</Label>
+                <Input
                     placeholder="Напр. Салон"
-                    placeholderTextColor="#94A3B8"
                     value={person}
                     onChangeText={setPerson}
                 />
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Чаевые (€)</Text>
-                <TextInput
-                    style={[styles.text, styles.input]}
+                <Label>Чаевые (€)</Label>
+                <Input
                     placeholder="0.00"
-                    placeholderTextColor="#94A3B8"
                     value={notes}
                     onChangeText={setNotes}
                     keyboardType="numeric"
                 />
 
-                <Text style={[styles.text, { fontSize: 14, color: '#64748B', marginBottom: 4, marginLeft: 4, marginTop: 12 }]}>Комментарии</Text>
-                <TextInput
-                    style={[styles.text, styles.input, { height: 100, borderRadius: 16, paddingTop: 12 }]}
+                <Label>Комментарии</Label>
+                <Input
                     placeholder="..."
-                    placeholderTextColor="#94A3B8"
                     value={comments}
                     onChangeText={setComments}
                     multiline={true}
+                    style={{ height: 80, textAlignVertical: 'top' }}
                 />
 
-                <ButtonSpecial
-                    style={{ marginTop: 32, marginBottom: 40 }}
-                    textStyle={{ fontSize: 20 }}
-                    title={isAddMode ? "Добавить" : "Сохранить изменения"}
+                <Button
+                    title={isAddMode ? "Добавить запись" : "Сохранить изменения"}
+                    variant="primary"
                     onPress={handleSubmit}
+                    style={{ marginTop: spacing.md }}
                 />
             </ScrollView>
         </SwipeableModal>

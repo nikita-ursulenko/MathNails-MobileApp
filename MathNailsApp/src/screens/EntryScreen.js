@@ -80,17 +80,18 @@ const ExpandableSection = ({ title, data, setSelectedDate, setSelectedIndex, set
 
             return (
               <TouchableOpacity
-                style={[styles.contentItem, {
+                style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: 16,
-                  borderRadius: 16,
-                  backgroundColor: theme === 'dark' ? '#111827' : '#FFFFFF',
-                  marginBottom: 8,
+                  padding: spacing.md,
+                  borderRadius: borderRadius.lg,
+                  backgroundColor: colors.surface,
+                  marginBottom: spacing.sm,
                   borderWidth: 1,
-                  borderColor: theme === 'dark' ? '#334155' : '#F1F5F9',
-                }]}
+                  borderColor: colors.border,
+                  ...shadows.sm,
+                }}
                 key={index}
                 onPress={() => {
                   setSelectedDate(title);
