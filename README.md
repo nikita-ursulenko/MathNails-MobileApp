@@ -1,4 +1,14 @@
 # React-MathNails 🎨📊
+<div align="center">
+  <div style="display:flex; justify-content:center; gap:5px; flex-wrap:wrap; margin: 10px 0;">
+    <a href="https://reactnative.dev/"><img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React Native"></a>
+    <a href="https://expo.dev/"><img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" alt="Expo"></a>
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"><img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript"></a>
+    <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS"></a>
+    <a href="https://reactnavigation.org/"><img src="https://img.shields.io/badge/React_Navigation-7B61FF?style=for-the-badge&logo=react-router&logoColor=white" alt="React Navigation"></a>
+    <a href="https://momentjs.com/"><img src="https://img.shields.io/badge/Moment.js-323330?style=for-the-badge&logo=moment.js&logoColor=white" alt="Moment.js"></a>
+  </div>
+</div>
 
 **React-MathNails** — это инновационное мобильное приложение, созданное специально для мастеров ногтевого сервиса.  
 Приложение помогает профессионалам эффективно управлять финансовыми расчетами, анализировать выполненную работу и организовывать учет клиентов.  
